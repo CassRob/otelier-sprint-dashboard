@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Committed vs Delivered Points â 2026</title>
+<title>Committed vs Delivered Points &ndash; 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,8 +77,8 @@
 
 <header>
   <div>
-    <h1>Committed vs Delivered Points â 2026</h1>
-    <div class="sub">PS Â· IBNU Feature Â· IBNU PBI Â· SMP Â· HLO Â· TPX Â· UDV Â· myDocs</div>
+    <h1>Committed vs Delivered Points &ndash; 2026</h1>
+    <div class="sub">PS &middot; IBNU Feature &middot; IBNU PBI &middot; SMP &middot; HLO &middot; TPX &middot; UDV &middot; myDocs</div>
   </div>
   <div class="last-updated" id="lastUpdated"></div>
 </header>
@@ -94,15 +94,15 @@
   </select>
   <span class="filter-pill" id="filterPill"></span>
   <span class="view-toggle">
-    <button class="view-btn active" id="btnCharts" onclick="setView('charts')">ð Charts</button>
-    <button class="view-btn" id="btnTable" onclick="setView('table')">ð Table</button>
+    <button class="view-btn active" id="btnCharts" onclick="setView('charts')">&#128202; Charts</button>
+    <button class="view-btn" id="btnTable" onclick="setView('table')">&#128203; Table</button>
   </span>
 </div>
 <div id="tableWrap" style="display:none"></div>
 
 <div class="summary-bar" id="summaryBar"></div>
 <div class="container" id="cards"></div>
-<footer>Data refreshed from Jira on __REFRESH_DATE__ Â· mydigitaloffice.atlassian.net</footer>
+<footer>Data refreshed from Jira on __REFRESH_DATE__ &middot; mydigitaloffice.atlassian.net</footer>
 
 <script>
 const SCHEDULE = [
@@ -124,8 +124,8 @@ const SCHEDULE = [
 
 const PROJECT_META = {
   'PS':          {name:'Platform Services',        badge:'badge-blue'},
-  'IBNU Feature':{name:'IntelliSight+ Â· Feature',  badge:'badge-purple'},
-  'IBNU PBI':    {name:'IntelliSight+ Â· PBI',       badge:'badge-teal'},
+  'IBNU Feature':{name:'IntelliSight+ &middot; Feature',  badge:'badge-purple'},
+  'IBNU PBI':    {name:'IntelliSight+ &middot; PBI',       badge:'badge-teal'},
   'SMP':         {name:'Snowflake Migration',        badge:'badge-blue'},
   'HLO':         {name:'Rec & OpsPack',              badge:'badge-blue'},
   'TPX':         {name:'TruePlan',                   badge:'badge-blue'},
@@ -589,7 +589,7 @@ for(const[key,meta] of Object.entries(PROJECT_META)){
     <div class="card-header">
       <span class="badge ${meta.badge}">${key}</span>
       <span class="project-name">${meta.name}</span>
-      ${activeLabel?`<span class="active-note">â Sprint ${activeLabel} in progress</span>`:''}
+      ${activeLabel?`<span class="active-note">&#9679; Sprint ${activeLabel} in progress</span>`:''}
       <div class="card-meta">
         <div class="meta-stat"><div class="ml">Committed (closed)</div><div class="mv blue" id="meta-c-${safeKey}">â</div></div>
         <div class="meta-stat"><div class="ml">Delivered (closed)</div><div class="mv green" id="meta-d-${safeKey}">â</div></div>
@@ -673,14 +673,14 @@ function buildTable(indices){
   h+='</tr></thead><tbody>';
   for(const i of indices){
     const s=SCHEDULE[i],active=i===ACTIVE_SPRINT_IDX;
-    h+=`<tr${active?' class="active-row"':''}><td class="td-sprint">${s.label}${s.note?` <span style="color:#6554c0;font-weight:400;font-size:10px">${s.note}</span>`:''}${active?' <span style="color:#ff8b00">â</span>':''}</td>`;
+    h+=`<tr${active?' class="active-row"':''}><td class="td-sprint">${s.label}${s.note?` <span style="color:#6554c0;font-weight:400;font-size:10px">${s.note}</span>`:''}${active?' <span style="color:#ff8b00">&#9679;</span>':''}</td>`;
     for(const t of teams){
       const e=(RAW[t]||{})[s.num];
       if(!e){h+='<td class="future">â</td><td class="future">â</td><td class="future">â</td><td class="future">â</td><td class="future">â</td>';}
       else{
         const[c,d,state,sc,co]=e,rate=c>0?Math.round(d/c*100)+'%':'â';
         const dim=state==='active'?'style="opacity:.6"':'';
-        h+=`<td class="c-val" ${dim}>${c||'â'}</td><td class="d-val" ${dim}>${d||'â'}</td><td class="${(co||0)>0?'co-val':'future'}" ${dim}>${co||'â'}</td><td class="${(sc||0)>0?'sc-val':'future'}" ${dim}>${sc||'â'}</td><td class="r-val" ${dim}>${rate}</td>`;
+        h+=`<td class="c-val" ${dim}>${c||'â'}</td><td class="d-val" ${dim}>${d||'â'}</td><td class="${(co||0)>0?'co-val':'future'}" ${dim}>${co||'â'}</td><td class="$x(sc||0)>0?'sc-val':'future'}" ${dim}>${sc||'â'}</td><td class="r-val" ${dim}>${rate}</td>`;
       }
     }
     h+='</tr>';
