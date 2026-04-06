@@ -102,7 +102,7 @@
 
 <div class="summary-bar" id="summaryBar"></div>
 <div class="container" id="cards"></div>
-<footer>Data refreshed from Jira on __REFRESH_DATE__ &middot; mydigitaloffice.atlassian.net</footer>
+<footer>Data refreshed from Jira on April 6, 2026 &middot; mydigitaloffice.atlassian.net</footer>
 
 <script>
 const SCHEDULE = [
@@ -560,10 +560,10 @@ document.getElementById('lastUpdated').innerHTML=
   `Data from Jira<br>Current sprint: <strong>${ACTIVE_SPRINT.label}${ACTIVE_SPRINT.note?' ('+ACTIVE_SPRINT.note+')':''}</strong>`;
 
 document.getElementById('summaryBar').innerHTML=`
-  <div class="summary-stat"><span class="label">Closed Sprints Committed</span><span class="value blue" id="stat-committed">â</span></div>
-  <div class="summary-stat"><span class="label">Closed Sprints Delivered</span><span class="value green" id="stat-delivered">â</span></div>
-  <div class="summary-stat"><span class="label">Overall Delivery Rate</span><span class="value amber" id="stat-rate">â</span></div>
-  <div class="summary-stat"><span class="label">Sprints in View</span><span class="value" id="stat-sprints">â</span></div>
+  <div class="summary-stat"><span class="label">Closed Sprints Committed</span><span class="value blue" id="stat-committed">-</span></div>
+  <div class="summary-stat"><span class="label">Closed Sprints Delivered</span><span class="value green" id="stat-delivered">-</span></div>
+  <div class="summary-stat"><span class="label">Overall Delivery Rate</span><span class="value amber" id="stat-rate">-</span></div>
+  <div class="summary-stat"><span class="label">Sprints in View</span><span class="value" id="stat-sprints">-</span></div>
 `;
 
 const optgroup=document.querySelector('#sprintFilter optgroup');
@@ -591,10 +591,10 @@ for(const[key,meta] of Object.entries(PROJECT_META)){
       <span class="project-name">${meta.name}</span>
       ${activeLabel?`<span class="active-note">&#9679; Sprint ${activeLabel} in progress</span>`:''}
       <div class="card-meta">
-        <div class="meta-stat"><div class="ml">Committed (closed)</div><div class="mv blue" id="meta-c-${safeKey}">â</div></div>
-        <div class="meta-stat"><div class="ml">Delivered (closed)</div><div class="mv green" id="meta-d-${safeKey}">â</div></div>
-        <div class="meta-stat"><div class="ml">Delivery Rate</div><div class="mv amber" id="meta-r-${safeKey}">â</div></div>
-        <div class="meta-stat"><div class="ml">Added Mid-Sprint</div><div class="mv" style="color:#e5691a" id="meta-s-${safeKey}">â</div></div>
+        <div class="meta-stat"><div class="ml">Committed (closed)</div><div class="mv blue" id="meta-c-${safeKey}">-</div></div>
+        <div class="meta-stat"><div class="ml">Delivered (closed)</div><div class="mv green" id="meta-d-${safeKey}">-</div></div>
+        <div class="meta-stat"><div class="ml">Delivery Rate</div><div class="mv amber" id="meta-r-${safeKey}">-</div></div>
+        <div class="meta-stat"><div class="ml">Added Mid-Sprint</div><div class="mv" style="color:#e5691a" id="meta-s-${safeKey}">-</div></div>
       </div>
     </div>
     <div class="legend">
@@ -637,9 +637,9 @@ function getIndices(v){const cur=ACTIVE_SPRINT_IDX,tot=SCHEDULE.length;
 }
 function updateMeta(key,indices){const raw=RAW[key]||{};const sk=key.replace(/\s+/g,'-');let c=0,d=0,sc=0;
   for(const i of indices){const e=raw[SCHEDULE[i].num];if(e&&e[2]==='closed'){c+=e[0];d+=e[1];sc+=(e[3]||0);}}
-  const r=c>0?Math.round(d/c*100)+'%':'â';
+  const r=c>0?Math.round(d/c*100)+'%':'-';
   const ec=document.getElementById(`meta-c-${sk}`),ed=document.getElementById(`meta-d-${sk}`),er=document.getElementById(`meta-r-${sk}`),es=document.getElementById(`meta-s-${sk}`);
-  if(ec)ec.textContent=c>0?Math.round(c).toLocaleString():'â';if(ed)ed.textContent=d>0?Math.round(d).toLocaleString():'â';if(er)er.textContent=r;if(es)es.textContent=sc>0?sc.toLocaleString()+' pts':'â';
+  if(ec)ec.textContent=c>0?Math.round(c).toLocaleString():'-';if(ed)ed.textContent=d>0?Math.round(d).toLocaleString():'-';if(er)er.textContent=r;if(es)es.textContent=sc>0?sc.toLocaleString()+' pts':'-';
 }
 function updateSummary(indices){let tc=0,td=0;const closed=new Set();
   for(const raw of Object.values(RAW)){for(const i of indices){const e=raw[SCHEDULE[i].num];if(e&&e[2]==='closed'){tc+=e[0];td+=e[1];closed.add(SCHEDULE[i].num);}}}
@@ -676,11 +676,11 @@ function buildTable(indices){
     h+=`<tr${active?' class="active-row"':''}><td class="td-sprint">${s.label}${s.note?` <span style="color:#6554c0;font-weight:400;font-size:10px">${s.note}</span>`:''}${active?' <span style="color:#ff8b00">&#9679;</span>':''}</td>`;
     for(const t of teams){
       const e=(RAW[t]||{})[s.num];
-      if(!e){h+='<td class="future">â</td><td class="future">â</td><td class="future">â</td><td class="future">â</td><td class="future">â</td>';}
+      if(!e){h+='<td class="future">-</td><td class="future">-</td><td class="future">-</td><td class="future">-</td><td class="future">-</td>';}
       else{
-        const[c,d,state,sc,co]=e,rate=c>0?Math.round(d/c*100)+'%':'â';
+        const[c,d,state,sc,co]=e,rate=c>0?Math.round(d/c*100)+'%':'-';
         const dim=state==='active'?'style="opacity:.6"':'';
-        h+=`<td class="c-val" ${dim}>${c||'â'}</td><td class="d-val" ${dim}>${d||'â'}</td><td class="${(co||0)>0?'co-val':'future'}" ${dim}>${co||'â'}</td><td class="$x(sc||0)>0?'sc-val':'future'}" ${dim}>${sc||'â'}</td><td class="r-val" ${dim}>${rate}</td>`;
+        h+=`<td class="c-val" ${dim}>${c||'-'}</td><td class="d-val" ${dim}>${d||'-'}</td><td class="${(co||0)>0?'co-val':'future'}" ${dim}>${co||'-'}</td><td class="${(sc||0)>0?'sc-val':'future'}" ${dim}>${sc||'-'}</td><td class="r-val" ${dim}>${rate}</td>`;
       }
     }
     h+='</tr>';
@@ -690,8 +690,8 @@ function buildTable(indices){
   for(const t of teams){
     let tc=0,td=0,tco=0,tsc=0;
     for(const i of indices){const e=(RAW[t]||{})[SCHEDULE[i].num];if(e&&e[2]==='closed'){tc+=e[0];td+=e[1];tsc+=(e[3]||0);tco+=(e[4]||0);}}
-    const tr=tc>0?Math.round(td/tc*100)+'%':'â';
-    h+=`<td class="c-val">${tc||'â'}</td><td class="d-val">${td||'â'}</td><td class="${tco>0?'co-val':'future'}">${tco||'â'}</td><td class="${tsc>0?'sc-val':'future'}">${tsc||'â'}</td><td class="r-val">${tr}</td>`;
+    const tr=tc>0?Math.round(td/tc*100)+'%':'-';
+    h+=`<td class="c-val">${tc||'-'}</td><td class="d-val">${td||'-'}</td><td class="${tco>0?'co-val':'future'}">${tco||'-'}</td><td class="${tsc>0?'sc-val':'future'}">${tsc||'-'}</td><td class="r-val">${tr}</td>`;
   }
   h+='</tr></tbody></table>';
   document.getElementById('tableWrap').innerHTML=h;
