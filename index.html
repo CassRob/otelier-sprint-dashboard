@@ -737,4 +737,8 @@ function setView(v){
   document.getElementById('btnTable').classList.toggle('active',v==='table');
   if(v==='table')buildTable(getIndices(document.getElementById('sprintFilter').value));
 }
-document.getElementById('sprintFilter').addEventListener('change',function()
+document.getElementById('sprintFilter').addEventListener('change',function(){applyFilter(this.value);});
+applyFilter('ytd');
+</script>
+</body>
+</html>
