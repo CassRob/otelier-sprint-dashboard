@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Committed vs Delivered Points – 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f5f7; color: #172b4d; }
+  header { background: #0052cc; color: white; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 22px; font-weight: 600; }
+  header .sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+  .last-updated { margin-left: auto; font-size: 12px; opacity: 0.7; text-align: right; }
+  .filter-bar { background: #f8f9fb; border-bottom: 1px solid #dfe1e6; padding: 10px 32px; display: flex; align-items: center; gap: 12px; }
+  .filter-bar label { font-size: 12px; font-weight: 600; color: #6b778c; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .filter-bar select { font-family: inherit; font-size: 13px; color: #172b4d; background: white; border: 1px solid #c1c7d0; border-radius: 4px; padding: 6px 28px 6px 10px; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236b778c' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; min-width: 200px; }
+  .filter-bar select:focus { outline: none; border-color: #0052cc; box-shadow: 0 0 0 2px rgba(0,82,204,0.2); }
+  .filter-pill { font-size: 11px; background: #e3ecfc; color: #0052cc; font-weight: 600; padding: 3px 10px; border-radius: 10px; letter-spacing: 0.3px; }
+  .summary-bar { background: white; border-bottom: 1px solid #dfe1e6; padding: 14px 32px; display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+  .summary-stat { display: flex; flex-direction: column; }
+  .summary-stat .label { font-size: 11px; color: #6b778c; text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-stat .value { font-size: 20px; font-weight: 700; }
+  .value.blue  { color: #0052cc; }
+  .value.green { color: #00875a; }
+  .value.amber { color: #ff8b00; }
+  .container { padding: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+  .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+  .card-header { padding: 14px 20px 10px; border-bottom: 1px solid #f0f1f3; display: flex; align-items: center; gap: 10px; }
+  .badge { color: white; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.5px; white-space: nowrap; }
+  .badge-blue   { background: #0052cc; }
+  .badge-purple { background: #6554c0; }
+  .badge-teal   { background: #00a3bf; }
+  .card-header .project-name { font-size: 14px; font-weight: 600; }
+  .active-note { font-size: 11px; color: #ff8b00; margin-left: 8px; font-style: italic; }
+  .card-meta { margin-left: auto; display: flex; gap: 20px; }
+  .meta-stat { text-align: right; }
+  .meta-stat .ml { font-size: 10px; color: #6b778c; text-transform: uppercase; }
+  .meta-stat .mv { font-size: 15px; font-weight: 700; }
+  .mv.blue  { color: #0052cc; }
+  .mv.green { color: #00875a; }
+  .mv.amber { color: #ff8b00; }
+  .chart-scroll { overflow-x: auto; padding: 12px 20px 16px; }
+  .chart-scroll canvas { display: block; }
+  .legend { display: flex; gap: 16px; padding: 0 20px 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b778c; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+  footer { text-align: center; padding: 20px; font-size: 12px; color: #6b778c; }
+  .view-toggle { display:flex; gap:4px; margin-left:auto; }
+  .view-btn { font-family:inherit; font-size:12px; padding:5px 14px; border:1px solid #c1c7d0; border-radius:4px; cursor:pointer; background:white; color:#6b778c; font-weight:600; transition:all .15s; }
+  .view-btn.active { background:#0052cc; color:white; border-color:#0052cc; }
+  #tableWrap { overflow-x:auto; padding:24px 32px 32px; }
+  .data-table { border-collapse:collapse; font-size:12px; white-space:nowrap; }
+  .data-table th { padding:6px 10px; text-align:center; border:1px solid #dfe1e6; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+  .data-table th.th-sprint { background:#172b4d; color:white; text-transform:none; font-size:12px; letter-spacing:0; min-width:110px; }
+  .data-table th.th-team { background:#172b4d; color:white; text-transform:none; font-size:12px; letter-spacing:0; }
+  .data-table th.h-c  { background:#dce9ff; color:#0052cc; }
+  .data-table th.h-d  { background:#d4f0e3; color:#00875a; }
+  .data-table th.h-sc { background:#fde8d4; color:#bf4d00; }
+  .data-table th.h-co { background:#ffe0d9; color:#ae2a19; }
+  .data-table th.h-r  { background:#f4f5f7; color:#6b778c; }
+  .data-table td { padding:5px 10px; text-align:right; border:1px solid #dfe1e6; }
+  .data-table td.td-sprint { text-align:left; font-weight:600; background:#f4f5f7; position:sticky; left:0; z-index:1; color:#172b4d; min-width:110px; }
+  .data-table td.c-val  { color:#0052cc; font-weight:600; }
+  .data-table td.d-val  { color:#00875a; font-weight:600; }
+  .data-table td.co-val { color:#ae2a19; font-weight:600; }
+  .data-table td.sc-val { color:#bf4d00; font-weight:600; }
+  .data-table td.r-val  { color:#6b778c; }
+  .data-table td.future { color:#c1c7d0; }
+  .data-table tr.active-row td { background:#fffae6 !important; }
+  .data-table tr.active-row td.td-sprint { background:#fff0b3 !important; }
+  .data-table tr:hover td { background:#f0f4ff; }
+  .data-table tr:hover td.td-sprint { background:#e6edff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Committed vs Delivered Points – 2026</h1>
+    <div class="sub">PS · IBNU Feature · IBNU PBI · SMP · HLO · TPX · UDV · myDocs</div>
+  </div>
+  <div class="last-updated" id="lastUpdated"></div>
+</header>
+
+<div class="filter-bar">
+  <label for="sprintFilter">View:</label>
+  <select id="sprintFilter">
+    <option value="ytd">Year to Date (YTD)</option>
+    <option value="all">All Sprints (Full Year)</option>
+    <option value="last6">Last 6 Sprints</option>
+    <option value="last3">Last 3 Sprints</option>
+    <optgroup label="── Individual Sprints ──"></optgroup>
+  </select>
+  <span class="filter-pill" id="filterPill"></span>
+  <span class="view-toggle">
+    <button class="view-btn active" id="btnCharts" onclick="setView('charts')">📊 Charts</button>
+    <button class="view-btn" id="btnTable" onclick="setView('table')">📋 Table</button>
+  </span>
+</div>
+<div id="tableWrap" style="display:none"></div>
+
+<div class="summary-bar" id="summaryBar"></div>
+<div class="container" id="cards"></div>
+<footer>Data refreshed from Jira on Apr 23, 2026 at 09:32 AM · mydigitaloffice.atlassian.net</footer>
+
+<script>
+const SCHEDULE = [
+  {num:'01',label:'2026.01',start:'12/31',end:'1/13'},{num:'02',label:'2026.02',start:'1/14',end:'1/27'},
+  {num:'03',label:'2026.03',start:'1/28',end:'2/10'},{num:'04',label:'2026.04',start:'2/11',end:'2/24'},
+  {num:'05',label:'2026.05',start:'2/25',end:'3/10'},{num:'06',label:'2026.06',start:'3/11',end:'3/24'},
+  {num:'07',label:'2026.07',start:'3/25',end:'3/31',note:'Hackathon'},{num:'08',label:'2026.08',start:'4/1',end:'4/14'},
+  {num:'09',label:'2026.09',start:'4/15',end:'4/28'},{num:'10',label:'2026.10',start:'4/29',end:'5/12'},
+  {num:'11',label:'2026.11',start:'5/13',end:'5/26'},{num:'12',label:'2026.12',start:'5/27',end:'6/9'},
+  {num:'13',label:'2026.13',start:'6/10',end:'6/23'},{num:'14',label:'2026.14',start:'6/24',end:'6/30',note:'Mini sprint'},
+  {num:'15',label:'2026.15',start:'7/1',end:'7/14'},{num:'16',label:'2026.16',start:'7/15',end:'7/28'},
+  {num:'17',label:'2026.17',start:'7/29',end:'8/11'},{num:'18',label:'2026.18',start:'8/12',end:'8/25'},
+  {num:'19',label:'2026.19',start:'8/26',end:'9/8'},{num:'20',label:'2026.20',start:'9/9',end:'9/22'},
+  {num:'21',label:'2026.21',start:'9/23',end:'9/30',note:'Mini Sprint'},{num:'22',label:'2026.22',start:'10/1',end:'10/14'},
+  {num:'23',label:'2026.23',start:'10/15',end:'10/28'},{num:'24',label:'2026.24',start:'10/29',end:'11/11'},
+  {num:'25',label:'2026.25',start:'11/12',end:'11/25'},{num:'26',label:'2026.26',start:'11/26',end:'12/9'},
+  {num:'27',label:'2026.27',start:'12/10',end:'12/23'},{num:'28',label:'2026.28',start:'12/24',end:'12/31',note:'Mini Sprint'},
+];
+
+const PROJECT_META = {
+  'PS':          {name:'Platform Services',        badge:'badge-blue'},
+  'IBNU Feature':{name:'IntelliSight+ · Feature',  badge:'badge-purple'},
+  'IBNU PBI':    {name:'IntelliSight+ · PBI',       badge:'badge-teal'},
+  'SMP':         {name:'Snowflake Migration',        badge:'badge-blue'},
+  'HLO':         {name:'Rec & OpsPack',              badge:'badge-blue'},
+  'TPX':         {name:'TruePlan',                   badge:'badge-blue'},
+  'UDV':         {name:'Integration Development',    badge:'badge-blue'},
+  'myDocs':      {name:'DigiAudit Plus',             badge:'badge-blue'},
+};
+
+const RAW = {
+  "PS": {
+    "01": [
+      83,
+      12,
+      "closed",
+      23,
+      0
+    ],
+    "02": [
+      95,
+      7,
+      "closed",
+      5,
+      88
+    ],
+    "03": [
+      98,
+      0,
+      "closed",
+      6,
+      92
+    ],
+    "04": [
+      154,
+      2,
+      "closed",
+      6,
+      121
+    ],
+    "05": [
+      197,
+      2,
+      "closed",
+      2,
+      173
+    ],
+    "06": [
+      211,
+      57,
+      "closed",
+      5,
+      114
+    ],
+    "07": [
+      0,
+      0,
+      "closed",
+      0,
+      0
+    ],
+    "08": [
+      42,
+      16,
+      "closed",
+      0,
+      0
+    ],
+    "09": [
+      0,
+      0,
+      "active"
+    ]
+  },
+  "IBNU Feature": {
+    "02": [
+      138,
+      2,
+      "closed",
+      12,
+      0
+    ],
+    "04": [
+      146,
+      19,
+      "closed",
+      18,
+      112
+    ],
+    "05": [
+      128,
+      5,
+      "closed",
+      15,
+      68
+    ],
+    "06": [
+      117,
+      34,
+      "closed",
+      25,
+      94
+    ]
+  },
+  "IBNU PBI": {
+    "01": [
+      44,
+      11,
+      "closed",
+      23,
+      0
+    ],
+    "02": [
+      61,
+      59,
+      "closed",
+      41,
+      49
+    ],
+    "04": [
+      48,
+      66,
+      "closed",
+      52,
+      35
+    ],
+    "05": [
+      55,
+      49,
+      "closed",
+      32,
+      37
+    ],
+    "06": [
+      55,
+      48,
+      "closed",
+      38,
+      46
+    ],
+    "07": [
+      56,
+      33,
+      "closed",
+      18,
+      47
+    ],
+    "08": [
+      0,
+      0,
+      "active"
+    ]
+  },
+  "SMP": {
+    "01": [
+      36,
+      57,
+      "closed",
+      29,
+      0
+    ],
+    "02": [
+      46,
+      52,
+      "closed",
+      27,
+      31
+    ],
+    "04": [
+      33,
+      53,
+      "closed",
+      76,
+      23
+    ],
+    "05": [
+      87,
+      66,
+      "closed",
+      15,
+      58
+    ],
+    "06": [
+      67,
+      24,
+      "closed",
+      6,
+      49
+    ]
+  },
+  "HLO": {
+    "01": [
+      0,
+      7,
+      "closed",
+      4,
+      0
+    ],
+    "02": [
+      1,
+      19,
+      "closed",
+      19,
+      1
+    ],
+    "03": [
+      0,
+      34,
+      "closed",
+      36,
+      1
+    ],
+    "04": [
+      3,
+      45,
+      "closed",
+      81,
+      3
+    ],
+    "05": [
+      67,
+      46,
+      "closed",
+      39,
+      33
+    ],
+    "06": [
+      101,
+      48,
+      "closed",
+      16,
+      42
+    ],
+    "07": [
+      71,
+      42,
+      "closed",
+      10,
+      60
+    ],
+    "08": [
+      86,
+      62,
+      "closed",
+      14,
+      35
+    ],
+    "09": [
+      0,
+      0,
+      "active"
+    ]
+  },
+  "TPX": {
+    "01": [
+      28,
+      42,
+      "closed",
+      24,
+      0
+    ],
+    "02": [
+      4,
+      14,
+      "closed",
+      23,
+      11
+    ],
+    "03": [
+      0,
+      30,
+      "closed",
+      16,
+      21
+    ],
+    "04": [
+      0,
+      65,
+      "closed",
+      99,
+      7
+    ],
+    "05": [
+      42,
+      72,
+      "closed",
+      31,
+      40
+    ],
+    "06": [
+      61,
+      82,
+      "closed",
+      17,
+      54
+    ],
+    "07": [
+      22,
+      4,
+      "closed",
+      10,
+      16
+    ],
+    "08": [
+      89,
+      69,
+      "closed",
+      15,
+      29
+    ],
+    "09": [
+      0,
+      0,
+      "active"
+    ]
+  },
+  "UDV": {
+    "01": [
+      21,
+      14,
+      "closed",
+      12,
+      0
+    ],
+    "02": [
+      0,
+      20,
+      "closed",
+      22,
+      28
+    ],
+    "03": [
+      0,
+      17,
+      "closed",
+      10,
+      30
+    ],
+    "04": [
+      24,
+      73,
+      "closed",
+      151,
+      24
+    ],
+    "05": [
+      104,
+      42,
+      "closed",
+      58,
+      100
+    ],
+    "06": [
+      125,
+      67,
+      "closed",
+      40,
+      123
+    ],
+    "07": [
+      103,
+      8,
+      "closed",
+      6,
+      103
+    ],
+    "08": [
+      127,
+      37,
+      "closed",
+      23,
+      110
+    ],
+    "09": [
+      0,
+      0,
+      "active"
+    ]
+  },
+  "myDocs": {
+    "01": [
+      14,
+      6,
+      "closed",
+      10,
+      0
+    ],
+    "02": [
+      19,
+      4,
+      "closed",
+      5,
+      16
+    ],
+    "03": [
+      17,
+      5,
+      "closed",
+      10,
+      11
+    ],
+    "04": [
+      22,
+      7,
+      "closed",
+      20,
+      14
+    ],
+    "05": [
+      54,
+      3,
+      "closed",
+      5,
+      28
+    ],
+    "06": [
+      60,
+      0,
+      "closed",
+      0,
+      47
+    ],
+    "07": [
+      0,
+      0,
+      "closed",
+      0,
+      0
+    ],
+    "08": [
+      49,
+      0,
+      "closed",
+      8,
+      0
+    ],
+    "09": [
+      0,
+      0,
+      "active"
+    ]
+  }
+};
+
+const C_COMMITTED='#0052cc', C_DELIVERED='#00875a', C_CARRY='#de350b';
+const C_COMMITTED_ACTIVE='rgba(0,82,204,0.45)', C_DELIVERED_ACTIVE='rgba(0,135,90,0.45)', C_CARRY_ACTIVE='rgba(222,53,11,0.4)', C_FUTURE='#e2e4e9';
+
+// Current sprint — set by CURRENT_SPRINT in refresh_dashboard.py config, falls back to auto-detect
+const _SPRINT_OVERRIDE='09';
+let ACTIVE_SPRINT_IDX=-1;
+if(_SPRINT_OVERRIDE){
+  ACTIVE_SPRINT_IDX=SCHEDULE.findIndex(s=>s.num===_SPRINT_OVERRIDE);
+}
+if(ACTIVE_SPRINT_IDX<0){
+  // Auto-detect: use the sprint that the most teams are actively in
+  const _sc={};
+  for(const raw of Object.values(RAW)){for(const[num,entry] of Object.entries(raw)){if(entry[2]==='active')_sc[num]=(_sc[num]||0)+1;}}
+  let _bn=null,_bc=0;
+  for(const[num,count] of Object.entries(_sc)){if(count>_bc){_bc=count;_bn=num;}}
+  if(_bn)ACTIVE_SPRINT_IDX=SCHEDULE.findIndex(s=>s.num===_bn);
+}
+if(ACTIVE_SPRINT_IDX<0)ACTIVE_SPRINT_IDX=SCHEDULE.length-1;
+const ACTIVE_SPRINT=SCHEDULE[ACTIVE_SPRINT_IDX];
+const ALL_LABELS=SCHEDULE.map(s=>s.note?`${s.label}*`:s.label);
+
+document.getElementById('lastUpdated').innerHTML=
+  `Data from Jira<br>Current sprint: <strong>${ACTIVE_SPRINT.label}${ACTIVE_SPRINT.note?' ('+ACTIVE_SPRINT.note+')':''}</strong>`;
+
+document.getElementById('summaryBar').innerHTML=`
+  <div class="summary-stat"><span class="label">Closed Sprints Committed</span><span class="value blue" id="stat-committed">—</span></div>
+  <div class="summary-stat"><span class="label">Closed Sprints Delivered</span><span class="value green" id="stat-delivered">—</span></div>
+  <div class="summary-stat"><span class="label">Overall Delivery Rate</span><span class="value amber" id="stat-rate">—</span></div>
+  <div class="summary-stat"><span class="label">Sprints in View</span><span class="value" id="stat-sprints">—</span></div>
+`;
+
+const optgroup=document.querySelector('#sprintFilter optgroup');
+for(const s of SCHEDULE){const opt=document.createElement('option');opt.value=s.num;opt.textContent=`Sprint ${s.label}  (${s.start} – ${s.end})${s.note?' · '+s.note:''}`;optgroup.appendChild(opt);}
+
+const CHART_INSTANCES={};
+const container=document.getElementById('cards');
+
+for(const[key,meta] of Object.entries(PROJECT_META)){
+  const raw=RAW[key]||{};
+  const safeKey=key.replace(/\s+/g,'-');
+  const chartId=`chart-${safeKey}`;
+  const activeEntry=Object.entries(raw).find(([,e])=>e[2]==='active');
+  const activeLabel=activeEntry?SCHEDULE.find(s=>s.num===activeEntry[0])?.label:null;
+  const committed=[],delivered=[],carryOver=[],scopeCreep=[],cColors=[],dColors=[],coColors=[];
+  for(const s of SCHEDULE){
+    const entry=raw[s.num];
+    if(!entry){committed.push(0);delivered.push(0);carryOver.push(0);scopeCreep.push(0);cColors.push(C_FUTURE);dColors.push(C_FUTURE);coColors.push(C_FUTURE);}
+    else{const[c,d,state,sc,co]=entry;committed.push(c);delivered.push(d);carryOver.push(co||0);scopeCreep.push(sc||0);cColors.push(state==='active'?C_COMMITTED_ACTIVE:C_COMMITTED);dColors.push(state==='active'?C_DELIVERED_ACTIVE:C_DELIVERED);coColors.push(state==='active'?C_CARRY_ACTIVE:(co||0)>0?C_CARRY:C_FUTURE);}
+  }
+  const card=document.createElement('div');card.className='card';
+  card.innerHTML=`
+    <div class="card-header">
+      <span class="badge ${meta.badge}">${key}</span>
+      <span class="project-name">${meta.name}</span>
+      ${activeLabel?`<span class="active-note">● Sprint ${activeLabel} in progress</span>`:''}
+      <div class="card-meta">
+        <div class="meta-stat"><div class="ml">Committed (closed)</div><div class="mv blue" id="meta-c-${safeKey}">—</div></div>
+        <div class="meta-stat"><div class="ml">Delivered (closed)</div><div class="mv green" id="meta-d-${safeKey}">—</div></div>
+        <div class="meta-stat"><div class="ml">Delivery Rate</div><div class="mv amber" id="meta-r-${safeKey}">—</div></div>
+        <div class="meta-stat"><div class="ml">Added Mid-Sprint</div><div class="mv" style="color:#e5691a" id="meta-s-${safeKey}">—</div></div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:${C_COMMITTED}"></div>Committed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:${C_DELIVERED}"></div>Delivered</div>
+      <div class="legend-item"><div class="legend-dot" style="background:${C_CARRY}"></div>Carried Over</div>
+      <div class="legend-item"><div class="legend-dot" style="background:${C_COMMITTED_ACTIVE}"></div>Active sprint</div>
+      <div class="legend-item"><div class="legend-dot" style="background:${C_FUTURE}"></div>Future</div>
+    </div>
+    <div class="chart-scroll"><canvas id="${chartId}" width="1008" height="200"></canvas></div>`;
+  container.appendChild(card);
+  CHART_INSTANCES[key]=new Chart(document.getElementById(chartId),{
+    type:'bar',
+    data:{labels:[...ALL_LABELS],_scheduleSlice:[...SCHEDULE],_scopeCreep:[...scopeCreep],
+      datasets:[
+        {label:'Committed',data:[...committed],backgroundColor:[...cColors],borderRadius:3,barPercentage:0.78},
+        {label:'Delivered',data:[...delivered],backgroundColor:[...dColors],borderRadius:3,barPercentage:0.78},
+        {label:'Carried Over',data:[...carryOver],backgroundColor:[...coColors],borderRadius:3,barPercentage:0.78},
+      ]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+      title:(items)=>{const s=items[0].chart.data._scheduleSlice[items[0].dataIndex];return s?`${s.label}  (${s.start} – ${s.end})${s.note?' · '+s.note:''}`:'';}  ,
+      afterBody:(items)=>{const c=items[0].chart.data.datasets[0].data[items[0].dataIndex];const d=items[0].chart.data.datasets[1].data[items[0].dataIndex];const co=items[0].chart.data.datasets[2]?.data[items[0].dataIndex]||0;const sc=items[0].chart.data._scopeCreep?.[items[0].dataIndex]||0;if(!c&&!d&&!sc&&!co)return[];const lines=[];if(c||d)lines.push(`Delivery rate: ${c>0?Math.round(d/c*100):0}%`);if(co>0)lines.push(`Carried over: ${co} pts`);if(sc>0)lines.push(`Added mid-sprint: ${sc} pts`);return lines;}
+    }}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:(ctx)=>{const s=ctx.chart.data._scheduleSlice?.[ctx.index];return s?.note?'#6554c0':'#6b778c';}}},y:{grid:{color:'#f0f1f3'},ticks:{font:{size:11},color:'#6b778c'},beginAtZero:true}}}
+  });
+}
+
+const FULL={};
+for(const key of Object.keys(PROJECT_META)){
+  const raw=RAW[key]||{};
+  FULL[key]={c:[],d:[],co:[],sc:[],cc:[],dc:[],coc:[]};
+  for(const s of SCHEDULE){const e=raw[s.num];if(!e){FULL[key].c.push(0);FULL[key].d.push(0);FULL[key].co.push(0);FULL[key].sc.push(0);FULL[key].cc.push(C_FUTURE);FULL[key].dc.push(C_FUTURE);FULL[key].coc.push(C_FUTURE);}else{const co=e[4]||0;FULL[key].c.push(e[0]);FULL[key].d.push(e[1]);FULL[key].co.push(co);FULL[key].sc.push(e[3]||0);FULL[key].cc.push(e[2]==='active'?C_COMMITTED_ACTIVE:C_COMMITTED);FULL[key].dc.push(e[2]==='active'?C_DELIVERED_ACTIVE:C_DELIVERED);FULL[key].coc.push(e[2]==='active'?C_CARRY_ACTIVE:co>0?C_CARRY:C_FUTURE);}}
+}
+
+function getIndices(v){const cur=ACTIVE_SPRINT_IDX,tot=SCHEDULE.length;
+  if(v==='ytd')return Array.from({length:cur+1},(_,i)=>i);
+  if(v==='all')return Array.from({length:tot},(_,i)=>i);
+  if(v==='last6'){const s=Math.max(0,cur-5);return Array.from({length:cur-s+1},(_,i)=>s+i);}
+  if(v==='last3'){const s=Math.max(0,cur-2);return Array.from({length:cur-s+1},(_,i)=>s+i);}
+  const idx=SCHEDULE.findIndex(s=>s.num===v);return idx>=0?[idx]:[];
+}
+function updateMeta(key,indices){const raw=RAW[key]||{};const sk=key.replace(/\s+/g,'-');let c=0,d=0,sc=0;
+  for(const i of indices){const e=raw[SCHEDULE[i].num];if(e&&e[2]==='closed'){c+=e[0];d+=e[1];sc+=(e[3]||0);}}
+  const r=c>0?Math.round(d/c*100)+'%':'—';
+  const ec=document.getElementById(`meta-c-${sk}`),ed=document.getElementById(`meta-d-${sk}`),er=document.getElementById(`meta-r-${sk}`),es=document.getElementById(`meta-s-${sk}`);
+  if(ec)ec.textContent=c>0?Math.round(c).toLocaleString():'—';if(ed)ed.textContent=d>0?Math.round(d).toLocaleString():'—';if(er)er.textContent=r;if(es)es.textContent=sc>0?sc.toLocaleString()+' pts':'—';
+}
+function updateSummary(indices){let tc=0,td=0;const closed=new Set();
+  for(const raw of Object.values(RAW)){for(const i of indices){const e=raw[SCHEDULE[i].num];if(e&&e[2]==='closed'){tc+=e[0];td+=e[1];closed.add(SCHEDULE[i].num);}}}
+  const r=tc>0?Math.round(td/tc*100):0;
+  document.getElementById('stat-committed').textContent=Math.round(tc).toLocaleString()+' pts';
+  document.getElementById('stat-delivered').textContent=Math.round(td).toLocaleString()+' pts';
+  document.getElementById('stat-rate').textContent=r+'%';
+  document.getElementById('stat-sprints').textContent=`${indices.length} sprint${indices.length!==1?'s':''} (${closed.size} closed)`;
+}
+function applyFilter(v){
+  const indices=getIndices(v);
+  const px=Math.max(36,Math.min(80,Math.floor(800/Math.max(1,indices.length))));
+  const w=Math.max(600,indices.length*px);
+  for(const[key,chart] of Object.entries(CHART_INSTANCES)){
+    chart.data.labels=indices.map(i=>ALL_LABELS[i]);chart.data._scheduleSlice=indices.map(i=>SCHEDULE[i]);chart.data._scopeCreep=indices.map(i=>FULL[key].sc[i]);
+    chart.data.datasets[0].data=indices.map(i=>FULL[key].c[i]);chart.data.datasets[0].backgroundColor=indices.map(i=>FULL[key].cc[i]);
+    chart.data.datasets[1].data=indices.map(i=>FULL[key].d[i]);chart.data.datasets[1].backgroundColor=indices.map(i=>FULL[key].dc[i]);
+    chart.data.datasets[2].data=indices.map(i=>FULL[key].co[i]);chart.data.datasets[2].backgroundColor=indices.map(i=>FULL[key].coc[i]);
+    chart.canvas.width=w;chart.update();updateMeta(key,indices);
+  }
+  updateSummary(indices);
+  document.getElementById('filterPill').textContent=`${indices.length} sprint${indices.length!==1?'s':''} shown`;
+  if(typeof currentView!=='undefined'&&currentView==='table')buildTable(indices);
+}
+function buildTable(indices){
+  const teams=Object.keys(PROJECT_META);
+  let h='<table class="data-table"><thead><tr><th class="th-sprint" rowspan="2">Sprint</th>';
+  for(const t of teams)h+=`<th class="th-team" colspan="5">${PROJECT_META[t].name}</th>`;
+  h+='</tr><tr>';
+  for(const t of teams)h+='<th class="h-c">Committed</th><th class="h-d">Delivered</th><th class="h-co">Carried Over</th><th class="h-sc">+Added</th><th class="h-r">Rate</th>';
+  h+='</tr></thead><tbody>';
+  for(const i of indices){
+    const s=SCHEDULE[i],active=i===ACTIVE_SPRINT_IDX;
+    h+=`<tr${active?' class="active-row"':''}><td class="td-sprint">${s.label}${s.note?` <span style="color:#6554c0;font-weight:400;font-size:10px">${s.note}</span>`:''}${active?' <span style="color:#ff8b00">●</span>':''}</td>`;
+    for(const t of teams){
+      const e=(RAW[t]||{})[s.num];
+      if(!e){h+='<td class="future">—</td><td class="future">—</td><td class="future">—</td><td class="future">—</td><td class="future">—</td>';}
+      else{
+        const[c,d,state,sc,co]=e,rate=c>0?Math.round(d/c*100)+'%':'—';
+        const dim=state==='active'?'style="opacity:.6"':'';
+        h+=`<td class="c-val" ${dim}>${c||'—'}</td><td class="d-val" ${dim}>${d||'—'}</td><td class="${(co||0)>0?'co-val':'future'}" ${dim}>${co||'—'}</td><td class="${(sc||0)>0?'sc-val':'future'}" ${dim}>${sc||'—'}</td><td class="r-val" ${dim}>${rate}</td>`;
+      }
+    }
+    h+='</tr>';
+  }
+  // Totals row (closed sprints only)
+  h+='<tr style="border-top:2px solid #dfe1e6;font-weight:700;background:#f8f9fb"><td class="td-sprint" style="background:#e8eaf0">Totals (closed)</td>';
+  for(const t of teams){
+    let tc=0,td=0,tco=0,tsc=0;
+    for(const i of indices){const e=(RAW[t]||{})[SCHEDULE[i].num];if(e&&e[2]==='closed'){tc+=e[0];td+=e[1];tsc+=(e[3]||0);tco+=(e[4]||0);}}
+    const tr=tc>0?Math.round(td/tc*100)+'%':'—';
+    h+=`<td class="c-val">${tc||'—'}</td><td class="d-val">${td||'—'}</td><td class="${tco>0?'co-val':'future'}">${tco||'—'}</td><td class="${tsc>0?'sc-val':'future'}">${tsc||'—'}</td><td class="r-val">${tr}</td>`;
+  }
+  h+='</tr></tbody></table>';
+  document.getElementById('tableWrap').innerHTML=h;
+}
+let currentView='charts';
+function setView(v){
+  currentView=v;
+  document.getElementById('cards').style.display=v==='charts'?'':'none';
+  document.getElementById('tableWrap').style.display=v==='table'?'':'none';
+  document.getElementById('btnCharts').classList.toggle('active',v==='charts');
+  document.getElementById('btnTable').classList.toggle('active',v==='table');
+  if(v==='table')buildTable(getIndices(document.getElementById('sprintFilter').value));
+}
+document.getElementById('sprintFilter').addEventListener('change',function()
