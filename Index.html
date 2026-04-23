@@ -102,24 +102,24 @@
 
 <div class="summary-bar" id="summaryBar"></div>
 <div class="container" id="cards"></div>
-<footer>Data refreshed from Jira on Apr 22, 2026 at 11:31 AM · mydigitaloffice.atlassian.net</footer>
+<footer>Data refreshed from Jira on Apr 23, 2026 at 09:32 AM · mydigitaloffice.atlassian.net</footer>
 
 <script>
 const SCHEDULE = [
   {num:'01',label:'2026.01',start:'12/31',end:'1/13'},{num:'02',label:'2026.02',start:'1/14',end:'1/27'},
   {num:'03',label:'2026.03',start:'1/28',end:'2/10'},{num:'04',label:'2026.04',start:'2/11',end:'2/24'},
   {num:'05',label:'2026.05',start:'2/25',end:'3/10'},{num:'06',label:'2026.06',start:'3/11',end:'3/24'},
-  {num:'07',label:'2026.07',start:'3/25',end:'3/31',note:'Hackathon'},{num:'08',label:'2026.08',start:'4/1',end:'4/28'},
-  {num:'09',label:'2026.09',start:'4/29',end:'5/12'},{num:'10',label:'2026.10',start:'5/13',end:'5/26'},
-  {num:'11',label:'2026.11',start:'5/27',end:'6/9'},{num:'12',label:'2026.12',start:'6/10',end:'6/23'},
-  {num:'13',label:'2026.13',start:'6/24',end:'6/30',note:'Mini sprint'},{num:'14',label:'2026.14',start:'7/1',end:'7/14'},
-  {num:'15',label:'2026.15',start:'7/15',end:'7/28'},{num:'16',label:'2026.16',start:'7/29',end:'8/11'},
-  {num:'17',label:'2026.17',start:'8/12',end:'8/25'},{num:'18',label:'2026.18',start:'8/26',end:'9/8'},
-  {num:'19',label:'2026.19',start:'9/9',end:'9/22'},{num:'20',label:'2026.20',start:'9/23',end:'9/30',note:'Mini Sprint'},
-  {num:'21',label:'2026.21',start:'10/1',end:'10/14'},{num:'22',label:'2026.22',start:'10/15',end:'10/28'},
-  {num:'23',label:'2026.23',start:'10/29',end:'11/11'},{num:'24',label:'2026.24',start:'11/12',end:'11/25'},
-  {num:'25',label:'2026.25',start:'11/26',end:'12/9'},{num:'26',label:'2026.26',start:'12/10',end:'12/23'},
-  {num:'27',label:'2026.27',start:'12/24',end:'12/31',note:'Mini Sprint'},
+  {num:'07',label:'2026.07',start:'3/25',end:'3/31',note:'Hackathon'},{num:'08',label:'2026.08',start:'4/1',end:'4/14'},
+  {num:'09',label:'2026.09',start:'4/15',end:'4/28'},{num:'10',label:'2026.10',start:'4/29',end:'5/12'},
+  {num:'11',label:'2026.11',start:'5/13',end:'5/26'},{num:'12',label:'2026.12',start:'5/27',end:'6/9'},
+  {num:'13',label:'2026.13',start:'6/10',end:'6/23'},{num:'14',label:'2026.14',start:'6/24',end:'6/30',note:'Mini sprint'},
+  {num:'15',label:'2026.15',start:'7/1',end:'7/14'},{num:'16',label:'2026.16',start:'7/15',end:'7/28'},
+  {num:'17',label:'2026.17',start:'7/29',end:'8/11'},{num:'18',label:'2026.18',start:'8/12',end:'8/25'},
+  {num:'19',label:'2026.19',start:'8/26',end:'9/8'},{num:'20',label:'2026.20',start:'9/9',end:'9/22'},
+  {num:'21',label:'2026.21',start:'9/23',end:'9/30',note:'Mini Sprint'},{num:'22',label:'2026.22',start:'10/1',end:'10/14'},
+  {num:'23',label:'2026.23',start:'10/15',end:'10/28'},{num:'24',label:'2026.24',start:'10/29',end:'11/11'},
+  {num:'25',label:'2026.25',start:'11/12',end:'11/25'},{num:'26',label:'2026.26',start:'11/26',end:'12/9'},
+  {num:'27',label:'2026.27',start:'12/10',end:'12/23'},{num:'28',label:'2026.28',start:'12/24',end:'12/31',note:'Mini Sprint'},
 ];
 
 const PROJECT_META = {
@@ -570,13 +570,14 @@ const RAW = {
 const C_COMMITTED='#0052cc', C_DELIVERED='#00875a', C_CARRY='#de350b';
 const C_COMMITTED_ACTIVE='rgba(0,82,204,0.45)', C_DELIVERED_ACTIVE='rgba(0,135,90,0.45)', C_CARRY_ACTIVE='rgba(222,53,11,0.4)', C_FUTURE='#e2e4e9';
 
-// Current sprint override — edit CURRENT_SPRINT in refresh_dashboard.py config to change
-const _SPRINT_OVERRIDE='08';
+// Current sprint — set by CURRENT_SPRINT in refresh_dashboard.py config, falls back to auto-detect
+const _SPRINT_OVERRIDE='09';
 let ACTIVE_SPRINT_IDX=-1;
 if(_SPRINT_OVERRIDE){
   ACTIVE_SPRINT_IDX=SCHEDULE.findIndex(s=>s.num===_SPRINT_OVERRIDE);
 }
 if(ACTIVE_SPRINT_IDX<0){
+  // Auto-detect: use the sprint that the most teams are actively in
   const _sc={};
   for(const raw of Object.values(RAW)){for(const[num,entry] of Object.entries(raw)){if(entry[2]==='active')_sc[num]=(_sc[num]||0)+1;}}
   let _bn=null,_bc=0;
@@ -736,8 +737,4 @@ function setView(v){
   document.getElementById('btnTable').classList.toggle('active',v==='table');
   if(v==='table')buildTable(getIndices(document.getElementById('sprintFilter').value));
 }
-document.getElementById('sprintFilter').addEventListener('change',function(){applyFilter(this.value);});
-applyFilter('ytd');
-</script>
-</body>
-</html>
+document.getElementById('sprintFilter').addEventListener('change',function()
